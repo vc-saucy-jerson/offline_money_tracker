@@ -5,42 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vault | Offline Tracker</title>
     <style>
-        /* --- DESIGN SYSTEM --- */
         :root {
             --bg-body: #f4f4f5;
             --bg-card: #ffffff;
             --bg-hover: #fafafa;
-            
             --text-primary: #18181b;
             --text-secondary: #71717a;
             --text-tertiary: #a1a1aa;
-
-            --accent-primary: #18181b; /* Deep Charcoal */
+            --accent-primary: #18181b;
             --accent-primary-hover: #27272a;
             --accent-danger: #ef4444;
             --accent-success: #10b981;
-            
             --border-subtle: #e4e4e7;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            
             --radius-md: 12px;
             --radius-lg: 16px;
         }
 
-        /* --- RESET & BASE --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        
         body { 
             background-color: var(--bg-body); 
             color: var(--text-primary); 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.5;
-            padding: 2rem;
+            padding: 1rem;
             min-height: 100vh;
         }
 
-        /* --- UTILITIES --- */
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 900px; margin: 0 auto; width: 100%; }
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
         .items-center { align-items: center; }
@@ -52,56 +46,69 @@
         .font-bold { font-weight: 600; }
         .hidden { display: none !important; }
 
-        /* --- BUTTONS --- */
         button {
             border: none;
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 500;
-            padding: 0.6rem 1.2rem;
+            padding: 0.6rem 1rem;
             border-radius: var(--radius-md);
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
         }
         
-        /* Primary (Black) */
         .btn-primary { background: var(--accent-primary); color: white; }
         .btn-primary:hover { background: var(--accent-primary-hover); transform: translateY(-1px); }
         
-        /* Secondary (White/Outline) */
         .btn-secondary { background: white; border: 1px solid var(--border-subtle); color: var(--text-primary); }
         .btn-secondary:hover { background: var(--bg-hover); border-color: #d4d4d8; }
         
-        /* Danger/Success (Soft) */
         .btn-income { background: #d1fae5; color: #065f46; }
         .btn-income:hover { background: #a7f3d0; }
         .btn-expense { background: #fee2e2; color: #991b1b; }
         .btn-expense:hover { background: #fecaca; }
 
-        /* --- SETUP SCREEN --- */
         #setup-screen {
-            height: 80vh;
+            min-height: 80vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
+            padding: 1rem;
         }
+
         .setup-card {
             background: white;
-            padding: 3rem;
+            padding: 2rem;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
             max-width: 500px;
+            width: 100%;
         }
-        .setup-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
-        .setup-title { font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700; }
-        .setup-desc { color: var(--text-secondary); margin-bottom: 2rem; }
 
-        /* --- DASHBOARD HEADER --- */
-        .app-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); }
+        .setup-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+        .setup-title { font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .setup-desc { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
+        .setup-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+
+        @media (min-width: 640px) {
+            .setup-card { padding: 3rem; }
+            .setup-title { font-size: 1.5rem; }
+            .setup-actions { flex-direction: row; justify-content: center; }
+        }
+
+        .app-header { 
+            margin-bottom: 1.5rem; 
+            padding-bottom: 1rem; 
+            border-bottom: 1px solid var(--border-subtle); 
+            flex-wrap: wrap; 
+            gap: 1rem;
+        }
+
         .file-status { 
             font-size: 0.75rem; 
             padding: 4px 10px; 
@@ -109,111 +116,141 @@
             border-radius: 20px; 
             color: var(--text-secondary);
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
         }
+        
         .dot { height: 8px; width: 8px; background-color: var(--accent-success); border-radius: 50%; display: inline-block; margin-right: 5px; }
 
-        /* --- CARDS & GRID --- */
         .dashboard-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            gap: 1rem;
         }
+
         @media (min-width: 768px) {
-            .dashboard-grid { grid-template-columns: 2fr 1fr; }
+            body { padding: 2rem; }
+            .dashboard-grid { grid-template-columns: 2fr 1fr; gap: 1.5rem; }
             .summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .file-status { max-width: 300px; }
         }
 
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
-            padding: 1.5rem;
+            padding: 1.25rem;
             box-shadow: var(--shadow-sm);
         }
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 1rem; align-items: center; }
-        .card-title { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        /* Balance Section */
-        .balance-amount { font-size: 2.5rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
-        .stat-group { display: flex; gap: 2rem; margin-top: 1rem; }
-        .stat-item h4 { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 2px; }
-        .stat-item p { font-size: 1.1rem; font-weight: 600; }
+        @media (min-width: 640px) {
+            .card { padding: 1.5rem; }
+        }
+
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .balance-amount { font-size: 2rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; word-break: break-all; }
+        
+        @media (min-width: 640px) {
+            .balance-amount { font-size: 2.5rem; }
+        }
+
+        .summary-row { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+        .stat-item { background: var(--bg-body); padding: 1rem; border-radius: var(--radius-md); }
+        .stat-item h4 { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .stat-item p { font-size: 1rem; font-weight: 600; }
         .text-green { color: var(--accent-success); }
         .text-red { color: var(--accent-danger); }
 
-        /* --- DOUGHNUT CHART --- */
-        .chart-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .chart-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 250px; }
         .doughnut {
-            width: 160px;
-            height: 160px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             background: conic-gradient(#e4e4e7 0% 100%);
             position: relative;
-            /* Creates the hole */
             mask: radial-gradient(transparent 55%, black 56%);
             -webkit-mask: radial-gradient(transparent 55%, black 56%);
         }
-        .legend { margin-top: 1rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
-        .legend-item { display: flex; align-items: center; font-size: 0.75rem; color: var(--text-secondary); }
+        .legend { margin-top: 1.5rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+        .legend-item { display: flex; align-items: center; font-size: 0.75rem; color: var(--text-secondary); background: #f4f4f5; padding: 4px 8px; border-radius: 4px; }
         .legend-dot { width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
 
-        /* --- TABLE --- */
-        .table-container { overflow-x: auto; margin-top: 1.5rem; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { text-align: left; font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; padding: 1rem; border-bottom: 1px solid var(--border-subtle); }
-        td { padding: 1rem; font-size: 0.9rem; border-bottom: 1px solid #f4f4f5; color: var(--text-primary); }
+        .table-container { overflow-x: auto; margin-top: 1rem; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { text-align: left; font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; padding: 0.75rem; border-bottom: 1px solid var(--border-subtle); }
+        td { padding: 0.75rem; font-size: 0.85rem; border-bottom: 1px solid #f4f4f5; color: var(--text-primary); }
         tr:last-child td { border-bottom: none; }
-        .category-tag { background: #f4f4f5; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; color: var(--text-secondary); }
-        .empty-state { padding: 3rem; text-align: center; color: var(--text-tertiary); font-style: italic; }
+        .category-tag { background: #f4f4f5; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; color: var(--text-secondary); display: inline-block; }
+        .empty-state { padding: 2rem; text-align: center; color: var(--text-tertiary); font-style: italic; font-size: 0.9rem; }
 
-        /* --- MODAL --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(2px);
-            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(3px);
+            display: flex; align-items: flex-end; 
+            justify-content: center;
             z-index: 100;
             opacity: 0; visibility: hidden;
             transition: all 0.2s ease;
         }
+
+        @media (min-width: 640px) {
+            .modal-overlay { align-items: center; }
+        }
+
         .modal-overlay.active { opacity: 1; visibility: visible; }
         
         .modal-box {
             background: white;
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            width: 100%; max-width: 420px;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            width: 100%; max-width: 100%;
             box-shadow: var(--shadow-md);
-            transform: scale(0.95);
-            transition: transform 0.2s ease;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        @media (min-width: 640px) {
+            .modal-box {
+                border-radius: var(--radius-lg);
+                max-width: 420px;
+                transform: scale(0.95);
+                transition: transform 0.2s ease;
+            }
+            .modal-overlay.active .modal-box { transform: scale(1); }
+        }
+
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        @media (min-width: 640px) { .modal-overlay.active .modal-box { transform: scale(1); } }
         
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
         .form-input, .form-select { 
-            width: 100%; padding: 0.75rem; 
+            width: 100%; padding: 0.8rem; 
             border: 1px solid var(--border-subtle); 
             border-radius: var(--radius-md); 
             font-size: 1rem; 
             background: #fff;
             transition: border-color 0.2s;
+            appearance: none;
         }
         .form-input:focus { border-color: var(--accent-primary); }
         
-        /* ICONS SVG HELPER */
         .icon { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 </head>
 <body>
 
-    <!-- 1. SETUP SCREEN -->
     <div id="setup-screen">
         <div class="setup-card">
             <span class="setup-icon">🔐</span>
             <h1 class="setup-title">Local Finance Vault</h1>
             <p class="setup-desc">Your financial data stays 100% offline. Select a local file to begin securely tracking your money.</p>
-            <div class="flex gap-4 justify-center" style="justify-content: center;">
+            <div class="setup-actions">
                 <button class="btn-primary" onclick="createNewFile()">
                     <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     New Data File
@@ -226,12 +263,10 @@
         </div>
     </div>
 
-    <!-- 2. MAIN APP CONTENT -->
     <div id="app-content" class="container hidden">
         
-        <!-- Header -->
         <header class="app-header flex justify-between items-center">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2" style="flex: 1; min-width: 200px;">
                 <h2 class="font-bold">[JWS]</h2>
                 <div class="file-status" id="fileNameDisplay">
                     <span class="dot"></span> Not Connected
@@ -249,45 +284,38 @@
             </div>
         </header>
 
-        <!-- Grid Layout -->
         <div class="dashboard-grid">
             
-            <!-- Left Column: Balance & List -->
             <div class="flex flex-col gap-4">
                 
-                <!-- Main Balance Card -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Total Balance</span>
                         <div class="flex gap-2">
                             <button class="btn-income" onclick="openModal('income')">
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                Income
+                                <span class="hidden-xs">Income</span>
                             </button>
                             <button class="btn-expense" onclick="openModal('expense')">
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                Expense
+                                <span class="hidden-xs">Expense</span>
                             </button>
                         </div>
                     </div>
-                    <!-- CHANGED: Default placeholder to Peso -->
                     <div class="balance-amount" id="val-balance">₱0.00</div>
                     
-                    <div class="summary-row" style="margin-top: 2rem;">
+                    <div class="summary-row">
                         <div class="stat-item">
                             <h4>TODAY'S INCOME</h4>
-                            <!-- CHANGED: Default placeholder to Peso -->
                             <p class="text-green" id="val-today-income">+₱0.00</p>
                         </div>
                         <div class="stat-item">
                             <h4>TODAY'S EXPENSE</h4>
-                            <!-- CHANGED: Default placeholder to Peso -->
                             <p class="text-red" id="val-today-expenses">-₱0.00</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Transactions -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Today's Activity</span>
@@ -303,14 +331,12 @@
                                 </tr>
                             </thead>
                             <tbody id="transactions-container">
-                                <!-- Populated by JS -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Analytics -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Spending Breakdown</span>
@@ -325,19 +351,18 @@
         </div>
     </div>
 
-    <!-- MODAL POPUP -->
     <div class="modal-overlay" id="transactionModal">
         <div class="modal-box">
             <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
                 <h3 class="font-bold" style="font-size: 1.25rem;" id="modalTitle">New Transaction</h3>
-                <button onclick="closeModal()" style="padding: 0.25rem; background:none;">✕</button>
+                <button onclick="closeModal()" style="padding: 0.5rem; background:none; font-size: 1.2rem;">✕</button>
             </div>
             
             <input type="hidden" id="formType">
             
             <div class="form-group">
                 <label>Amount (PHP)</label>
-                <input type="number" id="formAmount" class="form-input" placeholder="0.00" min="0.01" step="0.01" required>
+                <input type="number" id="formAmount" class="form-input" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required>
             </div>
 
             <div class="form-group">
@@ -359,15 +384,13 @@
             </div>
 
             <div class="flex gap-2" style="margin-top: 2rem; justify-content: flex-end;">
-                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn-primary" onclick="saveTransaction()">Save Record</button>
+                <button class="btn-secondary" onclick="closeModal()" style="flex:1;">Cancel</button>
+                <button class="btn-primary" onclick="saveTransaction()" style="flex:1;">Save Record</button>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // 1. FILE SYSTEM LOGIC
         let fileHandle; 
         let appData = null;
 
@@ -418,13 +441,10 @@
         function launchApp() {
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('app-content').classList.remove('hidden');
-            
-            // Show just the filename
             document.getElementById('fileNameDisplay').innerHTML = `<span class="dot"></span> ${fileHandle.name}`;
             updateUI();
         }
 
-        // 2. EXPORT / IMPORT
         function exportJSON() {
             const dataStr = JSON.stringify(appData, null, 4);
             const blob = new Blob([dataStr], { type: "application/json" });
@@ -455,8 +475,6 @@
             event.target.value = ""; 
         }
 
-        // 3. CORE LOGIC
-        // CHANGED: Updated to Philippine Peso (en-PH, PHP)
         const formatCurrency = (num) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(num);
 
         function isToday(dateString) {
@@ -488,7 +506,6 @@
             document.getElementById('val-today-income').innerText = "+" + formatCurrency(todayIncome);
             document.getElementById('val-today-expenses').innerText = "-" + formatCurrency(todayExpenses);
 
-            // Chart Logic
             const chart = document.getElementById('offlinePieChart');
             const legend = document.getElementById('pieLegend');
             const noDataMsg = document.getElementById('no-data-msg');
@@ -562,7 +579,6 @@
             });
         }
 
-        // 4. MODAL FUNCTIONS
         function openModal(type) {
             const modal = document.getElementById('transactionModal');
             modal.classList.add('active');
