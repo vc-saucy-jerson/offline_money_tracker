@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault | Offline Tracker</title>
+    <style>
+        /* --- DESIGN SYSTEM --- */
+        :root {
+            --bg-body: #f4f4f5;
+            --bg-card: #ffffff;
+            --bg-hover: #fafafa;
+            
+            --text-primary: #18181b;
+            --text-secondary: #71717a;
+            --text-tertiary: #a1a1aa;
+
+            --accent-primary: #18181b; /* Deep Charcoal */
+            --accent-primary-hover: #27272a;
+            --accent-danger: #ef4444;
+            --accent-success: #10b981;
+            
+            --border-subtle: #e4e4e7;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-primary); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* --- UTILITIES --- */
+        .container { max-width: 900px; margin: 0 auto; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-muted { color: var(--text-secondary); }
+        .font-bold { font-weight: 600; }
+        .hidden { display: none !important; }
+
+        /* --- BUTTONS --- */
+        button {
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Primary (Black) */
+        .btn-primary { background: var(--accent-primary); color: white; }
+        .btn-primary:hover { background: var(--accent-primary-hover); transform: translateY(-1px); }
+        
+        /* Secondary (White/Outline) */
+        .btn-secondary { background: white; border: 1px solid var(--border-subtle); color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--bg-hover); border-color: #d4d4d8; }
+        
+        /* Danger/Success (Soft) */
+        .btn-income { background: #d1fae5; color: #065f46; }
+        .btn-income:hover { background: #a7f3d0; }
+        .btn-expense { background: #fee2e2; color: #991b1b; }
+        .btn-expense:hover { background: #fecaca; }
+
+        /* --- SETUP SCREEN --- */
+        #setup-screen {
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .setup-card {
+            background: white;
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            max-width: 500px;
+        }
+        .setup-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+        .setup-title { font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .setup-desc { color: var(--text-secondary); margin-bottom: 2rem; }
+
+        /* --- DASHBOARD HEADER --- */
+        .app-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); }
+        .file-status { 
+            font-size: 0.75rem; 
+            padding: 4px 10px; 
+            background: #e4e4e7; 
+            border-radius: 20px; 
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .dot { height: 8px; width: 8px; background-color: var(--accent-success); border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+        /* --- CARDS & GRID --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .dashboard-grid { grid-template-columns: 2fr 1fr; }
+            .summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 1rem; align-items: center; }
+        .card-title { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Balance Section */
+        .balance-amount { font-size: 2.5rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+        .stat-group { display: flex; gap: 2rem; margin-top: 1rem; }
+        .stat-item h4 { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 2px; }
+        .stat-item p { font-size: 1.1rem; font-weight: 600; }
+        .text-green { color: var(--accent-success); }
+        .text-red { color: var(--accent-danger); }
+
+        /* --- DOUGHNUT CHART --- */
+        .chart-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        .doughnut {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: conic-gradient(#e4e4e7 0% 100%);
+            position: relative;
+            /* Creates the hole */
+            mask: radial-gradient(transparent 55%, black 56%);
+            -webkit-mask: radial-gradient(transparent 55%, black 56%);
+        }
+        .legend { margin-top: 1rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+        .legend-item { display: flex; align-items: center; font-size: 0.75rem; color: var(--text-secondary); }
+        .legend-dot { width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+
+        /* --- TABLE --- */
+        .table-container { overflow-x: auto; margin-top: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; padding: 1rem; border-bottom: 1px solid var(--border-subtle); }
+        td { padding: 1rem; font-size: 0.9rem; border-bottom: 1px solid #f4f4f5; color: var(--text-primary); }
+        tr:last-child td { border-bottom: none; }
+        .category-tag { background: #f4f4f5; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; color: var(--text-secondary); }
+        .empty-state { padding: 3rem; text-align: center; color: var(--text-tertiary); font-style: italic; }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100;
+            opacity: 0; visibility: hidden;
+            transition: all 0.2s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .modal-box {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            width: 100%; max-width: 420px;
+            box-shadow: var(--shadow-md);
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .form-input, .form-select { 
+            width: 100%; padding: 0.75rem; 
+            border: 1px solid var(--border-subtle); 
+            border-radius: var(--radius-md); 
+            font-size: 1rem; 
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--accent-primary); }
+        
+        /* ICONS SVG HELPER */
+        .icon { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. SETUP SCREEN -->
+    <div id="setup-screen">
+        <div class="setup-card">
+            <span class="setup-icon">🔐</span>
+            <h1 class="setup-title">Local Finance Vault</h1>
+            <p class="setup-desc">Your financial data stays 100% offline. Select a local file to begin securely tracking your money.</p>
+            <div class="flex gap-4 justify-center" style="justify-content: center;">
+                <button class="btn-primary" onclick="createNewFile()">
+                    <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    New Data File
+                </button>
+                <button class="btn-secondary" onclick="openExistingFile()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    Open Existing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APP CONTENT -->
+    <div id="app-content" class="container hidden">
+        
+        <!-- Header -->
+        <header class="app-header flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <h2 class="font-bold">[JWS]</h2>
+                <div class="file-status" id="fileNameDisplay">
+                    <span class="dot"></span> Not Connected
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button class="btn-secondary" onclick="exportJSON()" title="Download Backup">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </button>
+                <button class="btn-secondary" onclick="document.getElementById('fileInput').click()" title="Import File">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                </button>
+                <input type="file" id="fileInput" accept=".json" onchange="importJSON(event)" class="hidden">
+            </div>
+        </header>
+
+        <!-- Grid Layout -->
+        <div class="dashboard-grid">
+            
+            <!-- Left Column: Balance & List -->
+            <div class="flex flex-col gap-4">
+                
+                <!-- Main Balance Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Total Balance</span>
+                        <div class="flex gap-2">
+                            <button class="btn-income" onclick="openModal('income')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Income
+                            </button>
+                            <button class="btn-expense" onclick="openModal('expense')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Expense
+                            </button>
+                        </div>
+                    </div>
+                    <!-- CHANGED: Default placeholder to Peso -->
+                    <div class="balance-amount" id="val-balance">₱0.00</div>
+                    
+                    <div class="summary-row" style="margin-top: 2rem;">
+                        <div class="stat-item">
+                            <h4>TODAY'S INCOME</h4>
+                            <!-- CHANGED: Default placeholder to Peso -->
+                            <p class="text-green" id="val-today-income">+₱0.00</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>TODAY'S EXPENSE</h4>
+                            <!-- CHANGED: Default placeholder to Peso -->
+                            <p class="text-red" id="val-today-expenses">-₱0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Today's Activity</span>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-container">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Analytics -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Spending Breakdown</span>
+                </div>
+                <div class="chart-wrapper">
+                    <div class="doughnut" id="offlinePieChart"></div>
+                    <div class="legend" id="pieLegend"></div>
+                    <p id="no-data-msg" class="text-muted text-sm hidden" style="margin-top:1rem;">No expenses yet today.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL POPUP -->
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal-box">
+            <div class="flex justify-between items-center" style="margin-bottom: 1.5rem;">
+                <h3 class="font-bold" style="font-size: 1.25rem;" id="modalTitle">New Transaction</h3>
+                <button onclick="closeModal()" style="padding: 0.25rem; background:none;">✕</button>
+            </div>
+            
+            <input type="hidden" id="formType">
+            
+            <div class="form-group">
+                <label>Amount (PHP)</label>
+                <input type="number" id="formAmount" class="form-input" placeholder="0.00" min="0.01" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="formDesc" class="form-input" placeholder="e.g. Jollibee" required>
+            </div>
+
+            <div class="form-group" id="categoryGroup">
+                <label>Category</label>
+                <select id="formCategory" class="form-select">
+                    <option value="Housing">Housing</option>
+                    <option value="Food">Food & Dining</option>
+                    <option value="Transportation">Transportation</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Health">Health</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2" style="margin-top: 2rem; justify-content: flex-end;">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveTransaction()">Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. FILE SYSTEM LOGIC
+        let fileHandle; 
+        let appData = null;
+
+        const defaultData = {
+            summary: { balance: 0 },
+            transactions: []
+        };
+
+        async function createNewFile() {
+            try {
+                fileHandle = await window.showSaveFilePicker({
+                    suggestedName: 'vault_data.json',
+                    types: [{ description: 'JSON File', accept: {'application/json': ['.json']} }]
+                });
+                appData = defaultData;
+                await writeToLocalFile(); 
+                launchApp();
+            } catch (err) {
+                console.log("Cancelled");
+            }
+        }
+
+        async function openExistingFile() {
+            try {
+                [fileHandle] = await window.showOpenFilePicker({
+                    types: [{ description: 'JSON File', accept: {'application/json': ['.json']} }]
+                });
+                const file = await fileHandle.getFile();
+                const contents = await file.text();
+                appData = contents ? JSON.parse(contents) : defaultData;
+                launchApp();
+            } catch (err) {
+                console.log("Cancelled");
+            }
+        }
+
+        async function writeToLocalFile() {
+            if (!fileHandle) return;
+            try {
+                const writable = await fileHandle.createWritable();
+                await writable.write(JSON.stringify(appData, null, 4));
+                await writable.close();
+            } catch (err) {
+                alert("Could not save to file. Ensure it is not open elsewhere.");
+            }
+        }
+
+        function launchApp() {
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+            
+            // Show just the filename
+            document.getElementById('fileNameDisplay').innerHTML = `<span class="dot"></span> ${fileHandle.name}`;
+            updateUI();
+        }
+
+        // 2. EXPORT / IMPORT
+        function exportJSON() {
+            const dataStr = JSON.stringify(appData, null, 4);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const todayStr = new Date().toISOString().split('T')[0];
+            a.download = `vault_backup_${todayStr}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.transactions && confirm("Overwrite current local file with this import?")) {
+                        appData = importedData;
+                        await writeToLocalFile();
+                        updateUI();
+                    }
+                } catch (err) { alert("Invalid File"); }
+            };
+            reader.readAsText(file);
+            event.target.value = ""; 
+        }
+
+        // 3. CORE LOGIC
+        // CHANGED: Updated to Philippine Peso (en-PH, PHP)
+        const formatCurrency = (num) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(num);
+
+        function isToday(dateString) {
+            const today = new Date();
+            const trxDate = new Date(dateString);
+            return trxDate.getDate() === today.getDate() &&
+                   trxDate.getMonth() === today.getMonth() &&
+                   trxDate.getFullYear() === today.getFullYear();
+        }
+
+        function renderSummaryAndChart() {
+            let todayIncome = 0;
+            let todayExpenses = 0;
+            let categories = { "Housing": 0, "Food": 0, "Transportation": 0, "Utilities": 0, "Entertainment": 0, "Shopping": 0, "Health": 0 };
+
+            appData.transactions.forEach(trx => {
+                if (isToday(trx.rawDate)) {
+                    if (trx.type === 'income') todayIncome += trx.amount;
+                    else if (trx.type === 'expense') {
+                        todayExpenses += trx.amount;
+                        let cat = trx.category || "Other";
+                        if (categories[cat] !== undefined) categories[cat] += trx.amount;
+                        else categories["Other"] = (categories["Other"] || 0) + trx.amount;
+                    }
+                }
+            });
+
+            document.getElementById('val-balance').innerText = formatCurrency(appData.summary.balance);
+            document.getElementById('val-today-income').innerText = "+" + formatCurrency(todayIncome);
+            document.getElementById('val-today-expenses').innerText = "-" + formatCurrency(todayExpenses);
+
+            // Chart Logic
+            const chart = document.getElementById('offlinePieChart');
+            const legend = document.getElementById('pieLegend');
+            const noDataMsg = document.getElementById('no-data-msg');
+            legend.innerHTML = "";
+
+            if (todayExpenses === 0) {
+                chart.style.background = "#f4f4f5";
+                noDataMsg.classList.remove('hidden');
+                return;
+            } else {
+                noDataMsg.classList.add('hidden');
+            }
+
+            const catColors = { 
+                "Housing": "#3b82f6", "Food": "#10b981", "Transportation": "#f59e0b", 
+                "Utilities": "#ef4444", "Entertainment": "#8b5cf6", "Shopping": "#ec4899", "Health": "#06b6d4", "Other": "#64748b" 
+            };
+
+            let conicString = [];
+            let startPercent = 0;
+
+            for (let [category, amount] of Object.entries(categories)) {
+                if (amount > 0) {
+                    let slicePercent = (amount / todayExpenses) * 100;
+                    let endPercent = startPercent + slicePercent;
+                    let color = catColors[category] || "#64748b";
+                    
+                    conicString.push(`${color} ${startPercent}% ${endPercent}%`);
+                    startPercent = endPercent;
+
+                    legend.innerHTML += `
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background-color: ${color}"></div>
+                            <span>${category} ${Math.round(slicePercent)}%</span>
+                        </div>
+                    `;
+                }
+            }
+            chart.style.background = `conic-gradient(${conicString.join(', ')})`;
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactions-container');
+            container.innerHTML = "";
+            
+            const todaysTrx = appData.transactions.filter(trx => isToday(trx.rawDate)).reverse();
+            
+            if (todaysTrx.length === 0) {
+                container.innerHTML = `<tr><td colspan="4" class="empty-state">No transactions today</td></tr>`;
+                return;
+            }
+
+            todaysTrx.forEach(trx => {
+                const isIncome = trx.type === 'income';
+                const sign = isIncome ? "+" : "-";
+                const timeOnly = new Date(trx.rawDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const catDisplay = trx.category ? `<span class="category-tag">${trx.category}</span>` : '-';
+
+                container.innerHTML += `
+                    <tr>
+                        <td>
+                            <div class="font-bold" style="font-size:0.95rem;">${trx.desc}</div>
+                        </td>
+                        <td>${catDisplay}</td>
+                        <td class="${isIncome ? 'text-green' : ''}" style="font-weight:600;">
+                            ${sign}${formatCurrency(trx.amount)}
+                        </td>
+                         <td class="text-muted text-sm">${timeOnly}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 4. MODAL FUNCTIONS
+        function openModal(type) {
+            const modal = document.getElementById('transactionModal');
+            modal.classList.add('active');
+            
+            document.getElementById('formType').value = type;
+            document.getElementById('modalTitle').innerText = type === 'income' ? 'Add Income' : 'Add Expense';
+            
+            const catGroup = document.getElementById('categoryGroup');
+            if (type === 'income') catGroup.classList.add('hidden');
+            else catGroup.classList.remove('hidden');
+
+            document.getElementById('formDesc').value = '';
+            document.getElementById('formAmount').value = '';
+            setTimeout(() => document.getElementById('formAmount').focus(), 100);
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').classList.remove('active');
+        }
+
+        async function saveTransaction() {
+            const type = document.getElementById('formType').value;
+            const desc = document.getElementById('formDesc').value;
+            const amount = parseFloat(document.getElementById('formAmount').value);
+            const category = document.getElementById('formCategory').value;
+
+            if (!desc || isNaN(amount) || amount <= 0) {
+                alert("Please enter a description and valid amount.");
+                return;
+            }
+
+            let newBalance = appData.summary.balance;
+            if (type === 'income') newBalance += amount;
+            else newBalance -= amount;
+            
+            appData.summary.balance = newBalance;
+
+            const newTrx = {
+                rawDate: new Date().toISOString(),
+                desc: desc,
+                amount: amount,
+                type: type,
+                category: type === 'expense' ? category : null,
+                resultingBalance: newBalance 
+            };
+
+            appData.transactions.push(newTrx);
+            await writeToLocalFile();
+            updateUI();
+            closeModal();
+        }
+
+        function updateUI() {
+            renderSummaryAndChart();
+            renderTransactions();
+        }
+    </script>
+</body>
+</html>
